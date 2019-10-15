@@ -1,5 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
+import {InputNumber, Button} from 'antd';
+import {InputItem} from 'antd-mobile';
+import 'antd/dist/antd.css';
 import './index.css';
 
 function Square(props) {
@@ -149,20 +152,34 @@ class Game extends React.Component {
 
 
 // ======================================= 数独 start
-function Number(props) {
-    return (
-        <button className={props.className ? props.className : 'square'}>
-            {props.value}
-        </button>
-    );
+class Number extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            changedValue : props.value
+        }
+    }
+
+    handleValue(e) {
+        this.setState(() => ({changedValue: e === '' ? '' : e > 9 ? 9 : e < 1 ? 1 : e}));
+    }
+
+    render() {
+        return (
+            <InputItem type={"number"} className={this.props.className} disabled={this.props.disabled}
+                       value={this.state.changedValue}
+                       style={this.props.className === 'squareGrey' ? {background: '#cfcfcf'} : {}} onChange={(e) => this.handleValue(e)}/>
+        );
+    }
 }
 
 class Numbers extends React.Component {
-    renderNumber(i, className) {
+    renderNumber(i, className, disabled) {
         return (
             <Number
                 value={i}
                 className={className}
+                disabled={disabled}
             />
         );
     }
@@ -184,6 +201,17 @@ class Numbers extends React.Component {
         }
         return (
             <div>
+                <div className="board-row">
+                    <Button type="primary" style={{marginRight: 5, marginBottom: 5}}>
+                        提交
+                    </Button>
+                    <Button type="primary" style={{marginRight: 5, marginBottom: 5}}>
+                        重置
+                    </Button>
+                    <Button type="primary" style={{marginRight: 5, marginBottom: 5}}>
+                        重新生成
+                    </Button>
+                </div>
                 {boards.map((value, index) => {
                     if (index !== (boards.length - 1)) {
                         return (
@@ -200,15 +228,9 @@ class Numbers extends React.Component {
                     }
                 })}
                 <div className="board-row">
-                    {this.renderNumber(1)}
-                    {this.renderNumber(2)}
-                    {this.renderNumber(3)}
-                    {this.renderNumber(4)}
-                    {this.renderNumber(5)}
-                    {this.renderNumber(6)}
-                    {this.renderNumber(7)}
-                    {this.renderNumber(8)}
-                    {this.renderNumber(9)}
+                    {Array(9).fill(0).map((value, index) => {
+                        return (<button className="square">{index + 1}</button>);
+                    })}
                 </div>
             </div>
         );
@@ -222,10 +244,6 @@ class NumberGame extends React.Component {
                 <div className="game-board">
                     <Numbers
                     />
-                </div>
-                <div className="game-info">
-                    <div></div>
-                    <ol></ol>
                 </div>
             </div>
         );

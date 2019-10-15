@@ -40,6 +40,7 @@ ol, ul {
   padding: 0;
   text-align: center;
   width: 34px;
+  overflow:hidden;
 }
 
 .square:focus {
@@ -59,6 +60,7 @@ ol, ul {
   padding: 0;
   text-align: center;
   width: 34px;
+  overflow:hidden;
 }
 
 .squareGrey:focus {
@@ -72,6 +74,10 @@ ol, ul {
 .game {
   display: flex;
   flex-direction: row;
+}
+
+.game-board {
+  margin: 0 auto;
 }
 
 .game-info {
