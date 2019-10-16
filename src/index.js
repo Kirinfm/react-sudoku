@@ -156,7 +156,8 @@ class Number extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            changedValue: props.value
+            changedValue: props.value,
+            disabled: !!(props.value !== '')
         }
     }
 
@@ -164,9 +165,16 @@ class Number extends React.Component {
         this.setState(() => ({changedValue: e === '' ? '' : e > 9 ? 9 : e < 1 ? 1 : e}));
     }
 
+    componentWillReceiveProps(props) {
+        this.setState({
+            changedValue: props.value,
+            disabled: !!(props.value !== '')
+        });
+    }
+
     render() {
         return (
-            <InputItem type={"number"} className={this.props.className} disabled={this.props.disabled}
+            <InputItem type={"number"} className={this.props.className} disabled={this.state.disabled}
                        value={this.state.changedValue}
                        style={this.props.className === 'squareGrey' ? {background: '#cfcfcf'} : {}}
                        onChange={(e) => this.handleValue(e)}/>
@@ -190,7 +198,6 @@ class Numbers extends React.Component {
             <Number
                 value={i}
                 className={className}
-                disabled={!!(i !== '')}
             />
         );
     }
@@ -203,7 +210,6 @@ class Numbers extends React.Component {
      * @param {Array} idxInList - 同一数字在每行所处位置
      */
     avalibleIdx(rowList, idxOfRowList, idxInList) {
-        // console.log('in')
         let avalibleList = []
         for (let m = 0; m < 9; m++) {
             if (rowList[m] === undefined && idxInList.indexOf(m) === -1) {
