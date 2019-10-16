@@ -156,7 +156,7 @@ class Number extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            changedValue : props.value
+            changedValue: props.value
         }
     }
 
@@ -168,24 +168,111 @@ class Number extends React.Component {
         return (
             <InputItem type={"number"} className={this.props.className} disabled={this.props.disabled}
                        value={this.state.changedValue}
-                       style={this.props.className === 'squareGrey' ? {background: '#cfcfcf'} : {}} onChange={(e) => this.handleValue(e)}/>
+                       style={this.props.className === 'squareGrey' ? {background: '#cfcfcf'} : {}}
+                       onChange={(e) => this.handleValue(e)}/>
         );
     }
 }
 
 class Numbers extends React.Component {
-    renderNumber(i, className, disabled) {
+    constructor(props) {
+        super(props);
+        this.state = {
+            array: null,
+        };
+        this.generateSudokuSuccess = false;
+        this.avalibleIdx = this.avalibleIdx.bind(this);
+        this.generateSudoku = this.generateSudoku.bind(this);
+    }
+
+    renderNumber(i, className) {
         return (
             <Number
                 value={i}
                 className={className}
-                disabled={disabled}
+                disabled={!!(i !== '')}
             />
         );
     }
 
+    // 每行分为3块，idx在三行内不处于同一块
+    /**
+     *
+     * @param {Array} rowList - 当前行的数字填充情况
+     * @param {Number} idxOfRowList - 数独第几行
+     * @param {Array} idxInList - 同一数字在每行所处位置
+     */
+    avalibleIdx(rowList, idxOfRowList, idxInList) {
+        // console.log('in')
+        let avalibleList = []
+        for (let m = 0; m < 9; m++) {
+            if (rowList[m] === undefined && idxInList.indexOf(m) === -1) {
+                if (idxOfRowList % 3 === 0) {
+                    avalibleList.push(m)
+                } else {
+                    let blockLastIndex = idxInList[idxInList.length - 1]
+                    if ((blockLastIndex < 3 && m < 3) || ((blockLastIndex >= 3 && blockLastIndex < 6) && (m >= 3 && m < 6)) || (blockLastIndex >= 6 && m >= 6)) {
+                        continue
+                    } else {
+                        if (idxOfRowList % 3 === 2) {
+                            let blockAheadIdx = idxInList[idxInList.length - 2]
+                            if ((blockAheadIdx < 3 && m < 3) || ((blockAheadIdx >= 3 && blockAheadIdx < 6) && (m >= 3 && m < 6)) || (blockAheadIdx >= 6 && m >= 6)) {
+                                continue
+                            }
+                        }
+                        avalibleList.push(m)
+                    }
+                }
+            }
+        }
+        let resultList = Array.from(new Set(avalibleList))
+        return resultList[Math.floor(Math.random() * resultList.length)]
+
+    }
+
+    generateSudoku() {
+        let array = new Array(9)
+        for (let i = 0; i < 9; i++) {
+            array[i] = new Array(9)
+        }
+        let time = new Date().getTime()
+        for (let j = 0; j < 9; j++) {
+            let idxInList = []
+            let notComplete = true
+
+            while (notComplete) {
+                idxInList = []
+                for (let k = 0; k < 9; k++) {
+                    let avalibIdx = this.avalibleIdx(array[k], k, idxInList)
+                    if (avalibIdx !== undefined) {
+                        idxInList.push(avalibIdx)
+                    }
+                }
+                if (idxInList.length === 9) {
+                    notComplete = false
+                } else if (new Date().getTime() - time > 1000) {
+                    return
+                }
+            }
+            // 要return，不map
+            for (let n = 0; n < idxInList.length; n++) {
+                array[n][idxInList[n]] = j + 1;
+                if (j === 8 && n === 8) {
+                    this.generateSudokuSuccess = true;
+                    return array
+                }
+            }
+        }
+    }
+
     render() {
-        const boards = Array(9);
+        this.generateSudokuSuccess = false;
+        let result = null;
+        while (!this.generateSudokuSuccess) {
+            result = this.generateSudoku()
+        }
+        result = this.state.array ? this.state.array : result;
+        /*const boards = Array(9);
         for (let x = 0; x < 9; x++) {
             boards[x] = Array(9);
             let changeClassName = false;
@@ -198,7 +285,7 @@ class Numbers extends React.Component {
                 }
                 boards[x].push(this.renderNumber('', changeClassName ? 'square' : 'squareGrey'));
             }
-        }
+        }*/
         return (
             <div>
                 <div className="board-row">
@@ -208,11 +295,23 @@ class Numbers extends React.Component {
                     <Button type="primary" style={{marginRight: 5, marginBottom: 5}}>
                         重置
                     </Button>
-                    <Button type="primary" style={{marginRight: 5, marginBottom: 5}}>
+                    <Button type="primary" style={{marginRight: 5, marginBottom: 5}} onClick={() => {
+                        this.generateSudokuSuccess = false;
+                        this.setState({
+                            array: null
+                        });
+                        let result = null;
+                        while (!this.generateSudokuSuccess) {
+                            result = this.generateSudoku()
+                        }
+                        this.setState({
+                            array: result
+                        });
+                    }}>
                         重新生成
                     </Button>
                 </div>
-                {boards.map((value, index) => {
+                {/*{boards.map((value, index) => {
                     if (index !== (boards.length - 1)) {
                         return (
                             <div className="board-row">
@@ -223,6 +322,32 @@ class Numbers extends React.Component {
                         return (
                             <div className="board-board">
                                 {value}
+                            </div>
+                        );
+                    }
+                })}*/}
+                {result.map((value, index) => {
+                    let changeClassName = false;
+                    if ((index / 3) % 2 >= 1) {
+                        changeClassName = true;
+                    }
+                    const renderHtml = Array(value.length);
+                    value.map((v, i) => {
+                        if (i % 3 === 0) {
+                            changeClassName = !changeClassName;
+                        }
+                        renderHtml[i] = this.renderNumber((Math.random() >= .3 ? v : ''), changeClassName ? 'square' : 'squareGrey');
+                    });
+                    if (index !== (result.length - 1)) {
+                        return (
+                            <div className="board-row">
+                                {renderHtml}
+                            </div>
+                        );
+                    } else {
+                        return (
+                            <div className="board-board">
+                                {renderHtml}
                             </div>
                         );
                     }
@@ -249,6 +374,8 @@ class NumberGame extends React.Component {
         );
     }
 }
+
+// ======================================= 数独 end
 
 // ========================================
 
